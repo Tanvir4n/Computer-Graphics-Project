@@ -833,6 +833,36 @@ void rainSplash() {
 }
 
 
+// ##############################################
+// ##############################################
+// ##                                          ##
+// ##   FEATURE 1: ANIMATED WALKING PEDESTRIAN ##
+// ##   Developer: [Friend 1 er naam likhbe]   ##
+// ##                                          ##
+// ##   Description:                           ##
+// ##   Ekta animated stick figure manush      ##
+// ##   footpath/sidewalk er upor diye hate    ##
+// ##   habe. Tar body, matha, 2 ta haat o     ##
+// ##   2 ta pa ache. Pa gulo alternate kore   ##
+// ##   swing kore bole genuine walking        ##
+// ##   animation dekhabe.                     ##
+// ##                                          ##
+// ##   Algorithms Used:                       ##
+// ##   - DDA Line Algorithm: body, arms, legs ##
+// ##   - Midpoint Circle (Filled): head       ##
+// ##                                          ##
+// ##   Variables:                             ##
+// ##   - pedestrianX    : current X position  ##
+// ##   - pedestrianWalk : walk cycle angle    ##
+// ##   - showPedestrian : on/off toggle       ##
+// ##                                          ##
+// ##   Keyboard Controls:                     ##
+// ##   'p' = pedestrian ON                    ##
+// ##   'o' = pedestrian OFF                   ##
+// ##                                          ##
+// ##############################################
+// ##############################################
+
 float pedestrianX    = -0.95f; // Starting position (screen left theke suru)
 float pedestrianWalk = 0.0f;   // Walk cycle angle (radian) — leg/arm swing er jonno
 bool  showPedestrian = true;   // Pedestrian show/hide toggle
@@ -909,6 +939,190 @@ void pedestrian(float x, float walkAngle) {
 
     glPointSize(1.0f);
 }
+// ---- END OF FEATURE 1 ----
+
+
+// ##############################################
+// ##############################################
+// ##                                          ##
+// ##   FEATURE 2: AMBULANCE WITH FLASHING     ##
+// ##              SIREN LIGHTS                ##
+// ##   Developer: [Friend 2 er naam likhbe]   ##
+// ##                                          ##
+// ##   Description:                           ##
+// ##   Ekta white ambulance road er upor      ##
+// ##   diye move korbe. Tar upore ekta light  ##
+// ##   bar ache jeta alternate kore red o     ##
+// ##   white flash kore (siren effect).       ##
+// ##   Ambulance screen er baame chole gele   ##
+// ##   right theke fire ashe.                 ##
+// ##                                          ##
+// ##   Algorithms Used:                       ##
+// ##   - Midpoint Circle (Filled): siren bulb ##
+// ##   - Midpoint Circle (Outline): wheels    ##
+// ##   - Bresenham's Line: ambulance stripe   ##
+// ##   - GL_QUADS / GL_POLYGON: body          ##
+// ##                                          ##
+// ##   Variables:                             ##
+// ##   - ambulanceX      : current X position ##
+// ##   - ambulanceFlash  : flash timer counter##
+// ##   - flashState      : red=true/white=false##
+// ##                                          ##
+// ##   Keyboard Controls:                     ##
+// ##   Ambulance always moves automatically.  ##
+// ##   'a' = toggle ambulance visibility      ##
+// ##                                          ##
+// ##############################################
+// ##############################################
+
+float ambulanceX     = -1.2f; // Starting position (left side, off-screen theke)
+int   ambulanceFlash =  0;    // Flash timer — protiti frame e 1 baRe
+bool  flashState     = true;  // true = red light, false = white light
+bool  showAmbulance  = true;  // Toggle ambulance on/off
+
+// ambulance() — Ambulance gaari draw kore, flashing siren sahit
+// x          : ambulance er horizontal position (NDC)
+// flashState : siren light er current color (red/white)
+//
+// Body: white GL_QUADS
+// Red cross: Bresenham's Line Algorithm diye + chinho
+// Siren: midpointCircleFilled (red/white alternate)
+// Wheels: midpointCircle (outline + rim)
+// Headlight: midpointCircleFilled (yellow)
+// -----------------------------------------------
+void ambulance(float x, bool flashOn) {
+
+    // ---- AMBULANCE MAIN BODY ----
+    // White rectangular body
+    glColor3f(0.95f, 0.95f, 0.95f);
+    glBegin(GL_QUADS);
+    glVertex2f(x,        -0.68f);
+    glVertex2f(x + 0.28f,-0.68f);
+    glVertex2f(x + 0.28f,-0.57f);
+    glVertex2f(x,        -0.57f);
+    glEnd();
+
+    // ---- FRONT CABIN ----
+    // Slightly off-white cabin (driver compartment)
+    glColor3f(0.88f, 0.88f, 0.88f);
+    glBegin(GL_POLYGON);
+    glVertex2f(x + 0.28f, -0.68f);
+    glVertex2f(x + 0.34f, -0.65f);
+    glVertex2f(x + 0.34f, -0.59f);
+    glVertex2f(x + 0.28f, -0.57f);
+    glEnd();
+
+    // ---- WINDSHIELD ----
+    glColor3f(0.65f, 0.85f, 1.0f); // Light blue glass
+    glBegin(GL_QUADS);
+    glVertex2f(x + 0.285f, -0.66f);
+    glVertex2f(x + 0.33f,  -0.64f);
+    glVertex2f(x + 0.33f,  -0.60f);
+    glVertex2f(x + 0.285f, -0.60f);
+    glEnd();
+
+    // ---- SIDE WINDOWS ----
+    glColor3f(0.65f, 0.85f, 1.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(x + 0.03f, -0.59f);
+    glVertex2f(x + 0.12f, -0.59f);
+    glVertex2f(x + 0.12f, -0.63f);
+    glVertex2f(x + 0.03f, -0.63f);
+    glEnd();
+    glBegin(GL_QUADS);
+    glVertex2f(x + 0.14f, -0.59f);
+    glVertex2f(x + 0.23f, -0.59f);
+    glVertex2f(x + 0.23f, -0.63f);
+    glVertex2f(x + 0.14f, -0.63f);
+    glEnd();
+
+    // ---- RED CROSS SYMBOL (+) ----
+    // Bresenham's Line Algorithm diye cross chinho anka
+    // Horizontal bar of cross
+    glColor3f(0.9f, 0.1f, 0.1f);
+    glPointSize(4.0f);
+    bresenhamLine(x + 0.02f, -0.655f, x + 0.07f, -0.655f);
+    bresenhamLine(x + 0.02f, -0.650f, x + 0.07f, -0.650f);
+    bresenhamLine(x + 0.02f, -0.645f, x + 0.07f, -0.645f);
+    // Vertical bar of cross
+    bresenhamLine(x + 0.04f, -0.67f,  x + 0.04f, -0.63f);
+    bresenhamLine(x + 0.045f,-0.67f,  x + 0.045f,-0.63f);
+    glPointSize(1.0f);
+
+    // ---- "AMBULANCE" TEXT ----
+    glColor3f(0.8f, 0.1f, 0.1f);
+    glRasterPos2f(x + 0.09f, -0.658f);
+    char text[] = "AMBULANCE";
+    for (int i = 0; i < 9; i++)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, text[i]);
+
+    // ---- SIREN LIGHT BAR (on top of cabin) ----
+    // Dark bar base
+    glColor3f(0.2f, 0.2f, 0.2f);
+    glBegin(GL_QUADS);
+    glVertex2f(x + 0.10f, -0.57f);
+    glVertex2f(x + 0.26f, -0.57f);
+    glVertex2f(x + 0.26f, -0.56f);
+    glVertex2f(x + 0.10f, -0.56f);
+    glEnd();
+
+    // ---- FLASHING SIREN CIRCLES ----
+    // Midpoint Circle Algorithm (filled) diye
+    // flashState = true  → red + white
+    // flashState = false → white + red  (alternate)
+    glPointSize(2.5f);
+
+    if (flashOn) {
+        // Red on left, white on right
+        glColor3f(1.0f, 0.0f, 0.0f);
+        midpointCircleFilled(x + 0.13f, -0.555f, 0.013f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        midpointCircleFilled(x + 0.17f, -0.555f, 0.013f);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        midpointCircleFilled(x + 0.21f, -0.555f, 0.013f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        midpointCircleFilled(x + 0.25f, -0.555f, 0.013f);
+    } else {
+        // White on left, red on right (opposite — flash effect)
+        glColor3f(1.0f, 1.0f, 1.0f);
+        midpointCircleFilled(x + 0.13f, -0.555f, 0.013f);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        midpointCircleFilled(x + 0.17f, -0.555f, 0.013f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        midpointCircleFilled(x + 0.21f, -0.555f, 0.013f);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        midpointCircleFilled(x + 0.25f, -0.555f, 0.013f);
+    }
+
+    // ---- HEADLIGHT (front) ----
+    // Midpoint Circle Filled
+    glColor3f(1.0f, 1.0f, 0.6f);
+    midpointCircleFilled(x + 0.335f, -0.63f, 0.012f);
+
+    // ---- TAIL LIGHT (back) ----
+    glColor3f(1.0f, 0.2f, 0.2f);
+    midpointCircleFilled(x + 0.008f, -0.63f, 0.010f);
+
+    // ---- WHEELS ----
+    // Midpoint Circle Algorithm — outer tyre (dark)
+    glColor3f(0.05f, 0.05f, 0.05f);
+    glPointSize(2.0f);
+    midpointCircle(x + 0.07f, -0.70f, 0.022f);
+    midpointCircle(x + 0.23f, -0.70f, 0.022f);
+
+    // Inner rim (grey)
+    glColor3f(0.65f, 0.65f, 0.65f);
+    midpointCircle(x + 0.07f, -0.70f, 0.011f);
+    midpointCircle(x + 0.23f, -0.70f, 0.011f);
+
+    // Center hub (dark)
+    glColor3f(0.2f, 0.2f, 0.2f);
+    midpointCircleFilled(x + 0.07f, -0.70f, 0.004f);
+    midpointCircleFilled(x + 0.23f, -0.70f, 0.004f);
+
+    glPointSize(1.0f);
+}
+// ---- END OF FEATURE 2 ----
 
 
 // =============================================
@@ -956,9 +1170,13 @@ void display() {
     for (int i = 0; i < 5; i++)
         car(carX[i], 0.2f * i, 0.4f, 1.0f - 0.2f * i);
 
+    // ---- FEATURE 1: Draw walking pedestrian ----
     if (showPedestrian)
         pedestrian(pedestrianX, pedestrianWalk);
 
+    // ---- FEATURE 2: Draw ambulance ----
+    if (showAmbulance)
+        ambulance(ambulanceX, flashState);
 
     if (rain) { rainDraw(); rainSplash(); }
 
@@ -1023,9 +1241,13 @@ void keyboard(unsigned char key, int x, int y) {
     if (key == 's') rain  = false;
     if (key == 'n') night = true;
     if (key == 'd') night = false;
+
+    // Feature 1 controls
     if (key == 'p') showPedestrian = true;  // Pedestrian ON
     if (key == 'o') showPedestrian = false; // Pedestrian OFF
 
+    // Feature 2 controls
+    if (key == 'a') showAmbulance = !showAmbulance; // Ambulance toggle
 }
 
 // =============================================
