@@ -832,6 +832,85 @@ void rainSplash() {
     }
 }
 
+
+float pedestrianX    = -0.95f; // Starting position (screen left theke suru)
+float pedestrianWalk = 0.0f;   // Walk cycle angle (radian) — leg/arm swing er jonno
+bool  showPedestrian = true;   // Pedestrian show/hide toggle
+
+// pedestrian() — Stick figure manush draw kore
+// x         : manusher horizontal position (NDC)
+// walkAngle : leg/arm swing angle, update() theke ase
+//
+// Body parts (sob DDA Line Algorithm diye anka):
+//   HEAD    : midpointCircleFilled (circle)
+//   BODY    : vertical DDA line (spine)
+//   LEFT ARM: DDA line, walkAngle diye forward-back swing
+//   RIGHT ARM: DDA line, opposite direction swing
+//   LEFT LEG : DDA line, walkAngle diye forward-back swing
+//   RIGHT LEG: DDA line, opposite direction swing
+// -----------------------------------------------
+void pedestrian(float x, float walkAngle) {
+
+    float baseY = -0.62f; // Manush er paer niche (footpath level)
+
+    // ---- HEAD (Matha) ----
+    // Midpoint Circle Algorithm diye filled circle
+    glColor3f(0.95f, 0.75f, 0.55f); // Skin color
+    glPointSize(1.5f);
+    midpointCircleFilled(x, baseY + 0.14f, 0.022f);
+
+    // ---- BODY (Sharir) ----
+    // DDA Line Algorithm — spine er moto vertical line
+    glColor3f(0.2f, 0.4f, 0.8f); // Blue shirt
+    glPointSize(2.5f);
+    ddaLine(x, baseY + 0.12f, x, baseY + 0.06f); // Upper body
+    ddaLine(x, baseY + 0.06f, x, baseY + 0.00f); // Lower body
+
+    // ---- ARMS (Haat) ----
+    // DDA Line Algorithm diye, walkAngle use kore alternate swing
+    // Left arm: sin(walkAngle) diye forward
+    // Right arm: -sin(walkAngle) diye backward (opposite)
+    glColor3f(0.2f, 0.4f, 0.8f); // Same shirt color
+    glPointSize(2.0f);
+
+    float armSwing = 0.04f * sin(walkAngle);
+
+    // Left arm — DDA
+    ddaLine(x,                   baseY + 0.10f,
+            x - 0.025f + armSwing, baseY + 0.05f);
+
+    // Right arm — DDA (opposite swing)
+    ddaLine(x,                   baseY + 0.10f,
+            x + 0.025f - armSwing, baseY + 0.05f);
+
+    // ---- LEGS (Pa) ----
+    // DDA Line Algorithm diye, walkAngle use kore alternate swing
+    // Leg swing: left forward hoile right backward
+    glColor3f(0.15f, 0.15f, 0.40f); // Dark pants color
+    glPointSize(2.5f);
+
+    float legSwing = 0.05f * sin(walkAngle);
+
+    // Left leg — DDA
+    ddaLine(x, baseY + 0.00f,
+            x - 0.02f + legSwing, baseY - 0.05f);
+
+    // Right leg — DDA (opposite)
+    ddaLine(x, baseY + 0.00f,
+            x + 0.02f - legSwing, baseY - 0.05f);
+
+    // ---- FEET (Juta) ----
+    // Small horizontal DDA lines for feet
+    glColor3f(0.1f, 0.1f, 0.1f); // Black shoes
+    ddaLine(x - 0.02f + legSwing,  baseY - 0.05f,
+            x - 0.04f + legSwing,  baseY - 0.05f);
+    ddaLine(x + 0.02f - legSwing,  baseY - 0.05f,
+            x + 0.04f - legSwing,  baseY - 0.05f);
+
+    glPointSize(1.0f);
+}
+
+
 // =============================================
 // DISPLAY
 // =============================================
@@ -877,6 +956,10 @@ void display() {
     for (int i = 0; i < 5; i++)
         car(carX[i], 0.2f * i, 0.4f, 1.0f - 0.2f * i);
 
+    if (showPedestrian)
+        pedestrian(pedestrianX, pedestrianWalk);
+
+
     if (rain) { rainDraw(); rainSplash(); }
 
     glutSwapBuffers();
@@ -907,6 +990,27 @@ void update(int v) {
             }
         }
     }
+
+    // ---- FEATURE 1 UPDATE: pedestrian er position o walk cycle update ----
+    if (showPedestrian) {
+        pedestrianX    += 0.0012f; // Pedestrian er speed (car er cheye slow)
+        pedestrianWalk += 0.15f;   // Walk cycle angle — leg/arm swing speed
+        if (pedestrianX > 1.1f)
+            pedestrianX = -1.1f;   // Screen wrap — baame fire ashe
+    }
+
+    // ---- FEATURE 2 UPDATE: ambulance er position o flash update ----
+    if (showAmbulance) {
+        ambulanceX    += 0.004f;   // Ambulance er speed (police car theke fast)
+        ambulanceFlash++;
+        if (ambulanceFlash >= 8) { // Protiti 8 frame e light toggle hobe
+            ambulanceFlash = 0;
+            flashState     = !flashState; // Red to white, white to red
+        }
+        if (ambulanceX > 1.2f)
+            ambulanceX = -1.2f;    // Screen wrap
+    }
+
     glutPostRedisplay();
     glutTimerFunc(16, update, 0);
 }
@@ -919,6 +1023,9 @@ void keyboard(unsigned char key, int x, int y) {
     if (key == 's') rain  = false;
     if (key == 'n') night = true;
     if (key == 'd') night = false;
+    if (key == 'p') showPedestrian = true;  // Pedestrian ON
+    if (key == 'o') showPedestrian = false; // Pedestrian OFF
+
 }
 
 // =============================================
